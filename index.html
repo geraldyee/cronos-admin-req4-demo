@@ -273,8 +273,8 @@
     <!-- VIEW 3: Status Change Log -->
     <section class="view" id="view-log">
       <div class="page-head">
-        <div><h1>Status Change Log</h1><div class="sub">Every status change in the registry, regardless of origin. 90-day retention.</div></div>
-        <div class="asof">Window: 16/06/2026 to 14/09/2026</div>
+        <div><h1>Status Change Log</h1><div class="sub">Every status change in the registry, regardless of origin. 14-day retention.</div></div>
+        <div class="asof">Window: 01/09/2026 to 14/09/2026</div>
       </div>
       <div class="filters">
         <input class="search" id="l-search" placeholder="Search asset name or symbol..." oninput="renderLog()">
@@ -448,7 +448,7 @@ function gatePanel(a, i) {
     <div class="snap-foot">
       <div>First synced ${a.firstSynced} · Interest categories: ${cats} · Umbrella: ${a.umbrella}</div>
       ${note}
-      <div><a onclick="toggleHist(${i})">${a.showHist ? 'Hide 90-day history' : 'View 90-day history'}</a></div>
+      <div><a onclick="toggleHist(${i})">${a.showHist ? 'Hide 14-day history' : 'View 14-day history'}</a></div>
       ${hist}
     </div></div>`;
 }
