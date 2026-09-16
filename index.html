@@ -53,6 +53,8 @@
   .search{flex:1;min-width:260px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none}
   .search::placeholder{color:var(--muted2)}
   select.dd{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:7px 30px 7px 12px;font-size:12px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238b90a0'/></svg>");background-repeat:no-repeat;background-position:right 12px center;outline:none}
+  input.dd.date{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:999px;padding:6px 12px;font-size:12px;color-scheme:dark;outline:none;font-family:inherit}
+  input.dd.date::-webkit-calendar-picker-indicator{opacity:.6;cursor:pointer}
   .chip{background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:999px;padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:6px}
   .chip:hover{border-color:var(--border2)}
   .chip.on{background:rgba(56,214,240,.12);border-color:rgba(56,214,240,.5);color:var(--cyan)}
@@ -231,14 +233,15 @@
       <div class="filters">
         <input class="search" id="f-search" placeholder="Search name, symbol, identity key..." oninput="renderAssets()">
         <select class="dd" id="f-type" onchange="renderAssets()"><option value="">All types</option><option>crypto</option><option>stock</option><option>commodity</option></select>
+        <select class="dd" id="f-category" onchange="renderAssets()"><option value="">All categories</option></select>
         <select class="dd" id="f-status" onchange="renderAssets()"><option value="">All statuses</option><option>pre_list</option><option>tradable</option><option>active</option></select>
-        <select class="dd" id="f-inst" onchange="renderAssets()"><option value="">Spot &amp; perp</option><option value="spot">Spot only</option><option value="perp">Has perp</option></select>
         <select class="dd" id="f-origin" onchange="renderAssets()"><option value="">Origin: all</option><option>VVS whitelist</option><option>Hyperliquid</option><option>Launchpad graduate</option></select>
         <select class="dd" id="f-chain" onchange="renderAssets()"><option value="">Chain: all</option><option>Cronos EVM</option><option>n/a (perp)</option></select>
-        <span class="chip-label">Req 4</span>
-        <button class="chip amber" id="f-unmapped" onclick="toggleChip(this)"><span class="dot"></span>Unmapped category</button>
-        <button class="chip" id="f-excluded" onclick="toggleChip(this)"><span class="dot"></span>Excluded by operator</button>
-        <select class="dd" id="f-eligible" onchange="renderAssets()"><option value="">Eligible for: any</option><option value="tradable">Eligible for: tradable</option><option value="active">Eligible for: active</option></select>
+        <select class="dd" id="f-inst" onchange="renderAssets()"><option value="">Spot &amp; perp</option><option value="spot">Spot only</option><option value="perp">Has perp</option></select>
+        <span class="chip-label">Updated</span>
+        <input class="dd date" type="date" id="f-from" title="Updated from" onchange="renderAssets()">
+        <span class="chip-label" style="margin-left:0">to</span>
+        <input class="dd date" type="date" id="f-to" title="Updated to" onchange="renderAssets()">
       </div>
       <div class="table-wrap">
         <table>
@@ -489,7 +492,6 @@ function copyAddr(el, addr) {
 }
 
 // ---------- View 1 ----------
-function toggleChip(el) { el.classList.toggle('on'); renderAssets(); }
 function toggleRow(i) { assets[i].expanded = !assets[i].expanded; renderAssets(); }
 
 function filteredAssets() {
@@ -499,16 +501,34 @@ function filteredAssets() {
   const instF = document.getElementById('f-inst').value;
   const originF = document.getElementById('f-origin').value;
   const chainF = document.getElementById('f-chain').value;
-  const elig = document.getElementById('f-eligible').value;
-  const onlyUnmapped = document.getElementById('f-unmapped').classList.contains('on');
-  const onlyExcluded = document.getElementById('f-excluded').classList.contains('on');
-  return assets.map((a, i) => ({ a, i })).filter(({ a }) =>
-    (!q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q) || a.instruments.some(x => x.key.toLowerCase().includes(q))) &&
-    (!type || a.type === type) && (!status || a.status === status) &&
-    (!instF || a.branch === instF) &&
-    (!originF || a.origin === originF) && (!chainF || a.chain === chainF) &&
-    (!elig || a.eligible === elig) &&
-    (!onlyUnmapped || a.unmapped) && (!onlyExcluded || a.excluded));
+  const catF = document.getElementById('f-category').value;
+  const fromV = document.getElementById('f-from').value;
+  const toV = document.getElementById('f-to').value;
+  const from = fromV ? new Date(fromV + 'T00:00:00') : null;
+  const to = toV ? new Date(toV + 'T23:59:59') : null;
+  return assets.map((a, i) => ({ a, i })).filter(({ a }) => {
+    const upd = parseTs(a.updatedAt);
+    return (!q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q) || a.instruments.some(x => x.key.toLowerCase().includes(q))) &&
+      (!type || a.type === type) && (!status || a.status === status) &&
+      (!instF || a.branch === instF) &&
+      (!originF || a.origin === originF) && (!chainF || a.chain === chainF) &&
+      (!catF || (catF === '__unmapped' ? a.categories.length === 0 : a.categories.includes(catF))) &&
+      (!from || upd >= from) && (!to || upd <= to);
+  });
+}
+
+// "DD/MM/YYYY, HH:MM:SS" to Date
+function parseTs(s) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4}),\s*(\d{2}):(\d{2}):(\d{2})$/.exec(s || '');
+  return m ? new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +m[6]) : new Date(0);
+}
+
+// Populate the Categories dropdown from the sample data (interest categories in scope, plus Unmapped)
+function initCategoryFilter() {
+  const sel = document.getElementById('f-category');
+  const cats = [...new Set(assets.flatMap(a => a.categories))].sort();
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  const u = document.createElement('option'); u.value = '__unmapped'; u.textContent = 'Unmapped'; sel.appendChild(u);
 }
 
 // Identity strip (3.4.2 asset-level fields): origin, chain, contract, canonical asset, hold reason for pre_list.
@@ -649,7 +669,7 @@ document.querySelectorAll('.side-item[data-view]').forEach(el => el.addEventList
   document.getElementById('view-' + el.dataset.view).classList.add('on');
 }));
 
-renderAssets(); renderDashboard(); renderLog();
+initCategoryFilter(); renderAssets(); renderDashboard(); renderLog();
 </script>
 </body>
 </html>
