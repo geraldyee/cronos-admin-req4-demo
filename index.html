@@ -393,7 +393,7 @@ const assets = [
     categories: ['Crypto'], umbrella: 'Crypto', primaryValue: 42300,
     instruments: [ inst('spot', 'spot:cronos:0xb3e7d1a9c5f2e8b4d6a0c3e7f9b1d5a3c7e9f2b4', 'pre_list', 'cronos · 8 decimals · vvs · IOU, not listable (Step 0 rule 2)', 'coingecko', '07/08/2026, 08:07:00') ],
     gates: spotGates('08:34:56', 3, '', 42300, 61200) },
-  { name: 'Origin Protocol', symbol: 'OGN', type: 'crypto', status: 'tradable', branch: 'spot', color: '#1f8fff', ini: 'OG', staleDays: 14,
+  { name: 'Origin Protocol', symbol: 'OGN', type: 'crypto', status: 'tradable', branch: 'spot', color: '#1f8fff', ini: 'OG',
     origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '07/08/2026, 08:07:00', updatedBy: 'gerald.yee', updatedAt: '11/09/2026, 10:12:45',
     categories: ['Crypto', 'DeFi'], umbrella: 'Crypto', primaryValue: 3900,
@@ -565,7 +565,6 @@ function gatePanel(a, i) {
       : `<div class="note">Eligible for ${a.eligible}. Promotion is an operator action in the Phase 1 Admin Panel (not available in this view).</div>`;
   }
   if (a.sustain) note += `<div class="note">Becomes active after ${a.sustain.of} consecutive daily recomputes above the volume floor (3.2.4).</div>`;
-  if (a.staleDays) note += `<div class="note">Liquidity below the ${usd(THR.liq)} floor for ${a.staleDays} consecutive days. Stays tradable: delisting is out of scope (3.1.2).</div>`;
   if (a.identityNote) note += `<div class="note">${a.identityNote}</div>`;
   if (a.unmapped) note += `<div class="note warn">Interest category unmapped by the 3.3.1 category skill. Manual override is Phase 1 Admin Panel scope.</div>`;
 
@@ -603,7 +602,7 @@ function renderAssets() {
   if (!list.length) { body.innerHTML = '<tr><td colspan="10" class="empty">No assets match the current filters.</td></tr>'; return; }
   body.innerHTML = list.map(({ a, i }) => {
     const flags = (a.excluded ? pill('excl', 'Excluded') : '') + (a.unmapped ? pill('amber', 'Unmapped') : '')
-      + (a.highRisk ? pill('risk', 'High risk') : '') + (a.staleDays ? pill('stale', `Below floor ${a.staleDays}d`) : '');
+      + (a.highRisk ? pill('risk', 'High risk') : '');
     const instSummary = a.instruments.map(x => pill('inst', x.kind)).join(' ');
     return `<tr class="asset-row">
       <td><div class="asset-cell"><span class="chev ${a.expanded ? 'open' : ''}" onclick="toggleRow(${i})">&#9656;</span>
