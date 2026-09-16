@@ -278,7 +278,7 @@
               <tr class="total"><td>All origins</td><td class="num">114</td><td class="num">112</td><td class="num">235</td><td class="num">461</td></tr>
             </tbody>
           </table>
-          <div class="foot">Origin per 3.2.4. Rows sum to the status cards above. A new origin appears here as a new row, with no view change.</div>
+          <div class="foot">Counted by originating feed, the feed that first surfaced the asset (3.1.1). A spot + perp asset counts once, under the feed that surfaced it first. Rows sum to the status cards above. A new origin appears here as a new row, with no view change.</div>
         </div>
       </div>
       <div class="cards two">
@@ -510,7 +510,7 @@ function filteredAssets() {
     return (!q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q) || a.instruments.some(x => x.key.toLowerCase().includes(q))) &&
       (!type || a.type === type) && (!status || a.status === status) &&
       (!instF || a.branch === instF) &&
-      (!originF || (originF === 'launchpad' ? a.tag === 'Launchpad graduate' : a.origin === originF)) && (!chainF || a.chain === chainF) &&
+      (!originF || (originF === 'launchpad' ? a.tag === 'Launchpad graduate' : originsOf(a).includes(originF))) && (!chainF || a.chain === chainF) &&
       (!catF || (catF === '__unmapped' ? a.categories.length === 0 : a.categories.includes(catF))) &&
       (!from || upd >= from) && (!to || upd <= to);
   });
@@ -539,7 +539,7 @@ function identityStrip(a) {
     ? `<span class="mono">${trunc(a.contract)}</span><span class="copy" title="Copy address" onclick="copyAddr(this,'${a.contract}')">${COPY_SVG}</span>`
     : '<span class="muted">none (perp-only)</span>';
   return `<div class="ident">
-    <div class="cell"><div class="k">Origin</div><div class="v">${originCell(a)}</div></div>
+    <div class="cell"><div class="k">Origin</div><div class="v">${originCell(a)}${originsOf(a).length > 1 ? `<div class="sub">first surfaced via ${a.origin}</div>` : ''}</div></div>
     <div class="cell"><div class="k">Chain</div><div class="v">${a.chain}</div></div>
     <div class="cell"><div class="k">Contract</div><div class="v">${contract}</div></div>
     <div class="cell"><div class="k">Canonical asset</div><div class="v" title="${a.canonical === CAN_SELF ? CAN_SELF : a.canonical.asset + ' on ' + a.canonical.chain}">${canon}</div></div>
@@ -568,7 +568,7 @@ function gatePanel(a, i) {
   if (a.unmapped) note += `<div class="note warn">Interest category unmapped by the 3.3.1 category skill. Manual override is Phase 1 Admin Panel scope.</div>`;
 
   return `<div class="snap">
-    <div class="snap-head"><div><b>Daily gate snapshot</b> <span class="muted">· as of ${SNAP_TS} · origin: ${a.origin}${a.tag ? ' · ' + a.tag.toLowerCase() : ''} · branch: ${branch}</span></div><span class="ro">Read-only</span></div>
+    <div class="snap-head"><div><b>Daily gate snapshot</b> <span class="muted">· as of ${SNAP_TS} · origin: ${originsOf(a).join(' + ')}${a.tag ? ' · ' + a.tag.toLowerCase() : ''} · branch: ${branch}</span></div><span class="ro">Read-only</span></div>
     <table><thead><tr><th>Gate</th><th>Stage</th><th>Measured value</th><th>Threshold in force</th><th>Result</th></tr></thead><tbody>${rows}${perpNote}</tbody></table>
     <div class="snap-foot">
       <div>First synced ${a.firstSynced} · Interest categories: ${cats} · Umbrella: ${a.umbrella}</div>
@@ -588,8 +588,15 @@ function instRows(a) {
     </div>`).join('');
 }
 
-// Origin cell: origin pill, plus the launchpad tag where the VVS whitelist asset came in as a graduate.
-function originCell(a) { return pill('origin', a.origin) + (a.tag ? ' ' + pill('stage', a.tag) : ''); }
+// Instrument-level origins: a spot leg comes from the VVS whitelist, a perp leg from Hyperliquid.
+// a.origin stays the originating feed (the one that first surfaced the asset, 3.1.1) and is listed first.
+function originsOf(a) {
+  const set = new Set([a.origin]);
+  a.instruments.forEach(x => set.add(x.kind === 'perp' ? 'Hyperliquid' : 'VVS whitelist'));
+  return [...set];
+}
+// Origin cell: one pill per instrument origin (first-surfaced feed first), plus the launchpad tag where it applies.
+function originCell(a) { return originsOf(a).map(o => pill('origin', o)).join(' ') + (a.tag ? ' ' + pill('stage', a.tag) : ''); }
 
 // Eligible-for cell: sustain window > pre_list eligibility > none.
 function eligibleCell(a) {
