@@ -327,12 +327,12 @@
         <input class="search" id="l-search" placeholder="Search asset name or symbol..." oninput="renderLog()">
         <select class="dd" id="l-event" onchange="renderLog()"><option value="">Event: all</option><option value="status">Event: status change</option><option value="inst">Event: instrument event</option></select>
         <select class="dd" id="l-aorigin" onchange="renderLog()"><option value="">Origin: all</option><option>VVS whitelist</option><option>Hyperliquid</option></select>
-        <select class="dd" id="l-origin" onchange="renderLog()"><option value="">Origin of change: all</option><option>First sync</option><option>Daily recompute</option><option>Operator action</option></select>
+        <select class="dd" id="l-origin" onchange="renderLog()"><option value="">Reason for change: all</option><option>First sync</option><option>Daily recompute</option><option>Operator action</option></select>
         <span class="chip">02/09/2026 to 16/09/2026</span>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Timestamp</th><th>Asset</th><th>Origin</th><th>Chain</th><th>Event</th><th>From → To</th><th>Origin of change</th><th>Driving gate</th><th>Measured value</th><th>Threshold</th></tr></thead>
+          <thead><tr><th>Timestamp</th><th>Asset</th><th>Origin</th><th>Chain</th><th>Event</th><th>From → To</th><th>Reason for change</th><th>Driving gate</th><th>Measured value</th><th>Threshold</th></tr></thead>
           <tbody id="log-body"></tbody>
         </table>
       </div>
@@ -459,7 +459,7 @@ assets.forEach(a => {
 const umbrella = [['Crypto', 355], ['Stocks', 95], ['Commodities', 8], ['Foreign Exchange', 3]];
 const interest = [['Crypto', 302], ['Memecoins', 118], ['Cronos Ecosystem', 74], ['DeFi', 61], ['Tech & AI', 41], ['Big Brands', 27], ['Stock Market & Economy', 19], ['Gaming', 12], ['Semiconductors', 11], ['Healthcare', 9], ['Pop Culture & Entertainment', 8], ['Internet Culture', 7], ['Politics', 6], ['World News', 5], ['Gold & Silver', 4], ['Oil', 3], ['Foreign Exchange', 3], ['Space', 3], ['Energy', 2], ['Precious Metal', 2], ['Climate', 2]];
 
-// Log entries. src = [asset origin, chain]. event: 'status' (from/to) or 'inst' (desc). origin = origin of change.
+// Log entries. src = [asset origin, chain]. event: 'status' (from/to) or 'inst' (desc). origin = reason for change.
 const HL = ['Hyperliquid', 'n/a (perp)'], VVS = ['VVS whitelist', 'Cronos EVM'], LP = ['VVS whitelist', 'Cronos EVM'];
 const log = [
   { ts: '16/09/2026, 09:12:00', name: 'Pudgy Penguins', sym: 'PENGU', src: HL, event: 'inst', desc: 'Spot leg removed (spot:cronos:0x7694...)', origin: 'Operator action', by: 'gerald.yee' },
