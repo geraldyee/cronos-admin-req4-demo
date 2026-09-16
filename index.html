@@ -90,6 +90,10 @@
   .pill.excl{background:rgba(139,144,160,.16);color:#c9cdd6;border:1px dashed #4a5060}
   .pill.inst{background:#22262f;color:#c9cdd6;font-family:var(--mono);font-size:10.5px}
   .pill.stage{background:transparent;border:1px solid var(--border2);color:var(--muted);font-weight:500}
+  .pill.origin{background:rgba(91,156,255,.1);color:#a9c6ff;border:1px solid rgba(91,156,255,.25);font-weight:500;font-size:10.5px}
+  .pill.held{background:#22262f;color:#9aa0b0;border:1px solid #3a4050;cursor:help}
+  .pill.risk{background:transparent;border:1px solid rgba(251,191,36,.6);color:var(--amber);font-size:10px}
+  .pill.stale{background:#22262f;color:#8b90a0;font-size:10px;font-weight:500}
   .flags{display:inline-flex;gap:5px;margin-left:8px;vertical-align:middle}
   .actions{display:flex;gap:6px;justify-content:flex-end}
 
@@ -97,6 +101,15 @@
   tr.expand td{background:#12151b;padding:0 12px 14px 44px;white-space:normal}
   .inst-row{display:grid;grid-template-columns:52px minmax(300px,1.4fr) 84px minmax(160px,1fr) 100px 150px auto;gap:12px;align-items:center;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);margin-top:8px;font-size:12px}
   .inst-row .mono{color:#c9cdd6;overflow:hidden;text-overflow:ellipsis}
+  .ident{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+  .ident .cell{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-width:0}
+  .ident .k{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);font-weight:600;margin-bottom:4px}
+  .ident .v{font-size:12px;color:#d5d8e0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ident .v .sub{color:var(--muted);font-size:11px}
+  .copy{display:inline-flex;align-items:center;margin-left:6px;color:var(--muted);cursor:pointer;vertical-align:middle}
+  .copy:hover{color:var(--cyan)}
+  .copy.done{color:var(--green)}
+  .copy svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8}
   .snap{margin-top:12px;border:1px solid var(--border2);border-radius:10px;background:var(--card2);overflow:hidden}
   .snap-head{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);font-size:12px}
   .snap-head b{color:var(--text);font-weight:600}
@@ -117,6 +130,7 @@
   .cards.five{grid-template-columns:repeat(5,1fr)}
   .cards.two{grid-template-columns:1.1fr 1.6fr}
   .cards.three{grid-template-columns:2fr 1fr}
+  .cards.trio{grid-template-columns:1.7fr 1fr 1fr}
   .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
   .card.hl{border-color:rgba(56,214,240,.45);background:linear-gradient(180deg,rgba(56,214,240,.08),rgba(56,214,240,.02))}
   .card .cap{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);font-weight:600}
@@ -136,21 +150,30 @@
   .card table{min-width:0}
   .card th{padding:8px 10px;background:#181c24}
   .card td{padding:8px 10px;font-size:12px}
+  .card td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .card th.num{text-align:right}
+  .card tr.total td{font-weight:600;color:var(--text)}
+  .card tr.dim td{color:var(--muted2)}
+  .card tr.dim .pill{opacity:.55}
   .clr{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--border)}
   .clr:last-of-type{border-bottom:none}
   .clr b{font-size:20px;font-variant-numeric:tabular-nums}
   .clr .pct{color:var(--muted);font-size:12px}
+  .kv{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .kv:last-of-type{border-bottom:none}
+  .kv b{font-size:18px;font-variant-numeric:tabular-nums}
   .asof{color:var(--muted);font-size:12px;text-align:right}
 
   .view{display:none}
   .view.on{display:block}
   .empty{padding:24px;text-align:center;color:var(--muted)}
   .arrow{color:var(--muted2);margin:0 6px}
+  .evt{font-size:11px;color:var(--muted)}
 
   @media (max-width:1180px){
     .main{padding:16px 16px 40px}
     .cards.five{grid-template-columns:repeat(3,1fr)}
-    .cards.two,.cards.three{grid-template-columns:1fr}
+    .cards.two,.cards.three,.cards.trio{grid-template-columns:1fr}
     .two-col{grid-template-columns:1fr}
     .inst-row{grid-template-columns:52px 1fr 84px auto}
     .inst-row .hide-narrow{display:none}
@@ -194,7 +217,7 @@
 
   <main class="main">
     <div class="demo-banner" id="banner">
-      <span>Demo · Requirement 4 read-only views · sample data · not connected to TLA v2</span>
+      <span>Demo · Requirement 4 read-only views · reflects PRD revision 2026-09-16 (origins, holds, sustain windows) · sample data · not connected to TLA v2</span>
       <button onclick="document.getElementById('banner').style.display='none'" title="Dismiss">×</button>
     </div>
 
@@ -209,6 +232,9 @@
         <select class="dd" id="f-type" onchange="renderAssets()"><option value="">All types</option><option>crypto</option><option>stock</option><option>commodity</option></select>
         <select class="dd" id="f-status" onchange="renderAssets()"><option value="">All statuses</option><option>pre_list</option><option>tradable</option><option>active</option></select>
         <select class="dd" id="f-inst" onchange="renderAssets()"><option value="">Spot &amp; perp</option><option value="spot">Spot only</option><option value="perp">Has perp</option></select>
+        <select class="dd" id="f-origin" onchange="renderAssets()"><option value="">Origin: all</option><option>VVS whitelist</option><option>Hyperliquid</option><option>Launchpad graduate</option></select>
+        <select class="dd" id="f-chain" onchange="renderAssets()"><option value="">Chain: all</option><option>Cronos EVM</option><option>n/a (perp)</option></select>
+        <select class="dd" id="f-hold" onchange="renderAssets()"><option value="">Hold: any</option><option value="canonical chain unsupported">Hold: canonical chain unsupported</option><option value="excluded by operator decision">Hold: excluded by operator</option></select>
         <span class="chip-label">Req 4</span>
         <button class="chip amber" id="f-unmapped" onclick="toggleChip(this)"><span class="dot"></span>Unmapped category</button>
         <button class="chip" id="f-excluded" onclick="toggleChip(this)"><span class="dot"></span>Excluded by operator</button>
@@ -217,7 +243,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th style="width:280px">Asset</th><th>Type</th><th>Status</th><th>Eligible for</th><th>First synced</th><th>Instruments</th><th>Updated by</th><th>Updated at</th><th style="text-align:right">Actions</th>
+            <th style="width:250px">Asset</th><th>Type</th><th>Origin</th><th>Status</th><th>Eligible for</th><th>First synced</th><th>Instruments</th><th>Updated by</th><th>Updated at</th><th style="text-align:right">Actions</th>
           </tr></thead>
           <tbody id="asset-body"></tbody>
         </table>
@@ -231,11 +257,38 @@
         <div class="asof">As of 14/09/2026, 08:35:00 · recompute #212<br><span style="font-size:11px;color:var(--muted2)">Read-only. Counts reconcile to TLA v2 registry.</span></div>
       </div>
       <div class="cards five">
-        <div class="card"><div class="cap">Total assets</div><div class="big">475</div><div class="sm">Seed reference at migration: 475</div></div>
-        <div class="card"><div class="cap">pre_list</div><div class="big">118</div><div class="sm">Not user-visible</div></div>
-        <div class="card"><div class="cap">tradable</div><div class="big">121</div><div class="sm">Markets and search only</div></div>
-        <div class="card"><div class="cap">active</div><div class="big">236</div><div class="sm">Promoted on Explore</div></div>
-        <div class="card hl"><div class="cap" style="color:var(--cyan)">Awaiting operator step</div><div class="big">9</div><div class="sm">pre_list assets clearing tradable gates today</div></div>
+        <div class="card"><div class="cap">Total assets</div><div class="big">461</div><div class="sm">Seed reference at migration: 461 (3.1.1)</div></div>
+        <div class="card"><div class="cap">pre_list</div><div class="big">114</div><div class="sm">Not user-visible</div></div>
+        <div class="card"><div class="cap">tradable</div><div class="big">112</div><div class="sm">Markets and search only</div></div>
+        <div class="card"><div class="cap">active</div><div class="big">235</div><div class="sm">Promoted on Explore</div></div>
+        <div class="card hl"><div class="cap" style="color:var(--cyan)">Awaiting operator step</div><div class="big">9</div><div class="sm">pre_list assets clearing tradable gates today · excludes held assets</div></div>
+      </div>
+      <div class="cards trio">
+        <div class="card">
+          <h3>Breakdown by origin</h3>
+          <table>
+            <thead><tr><th>Origin</th><th class="num">pre_list</th><th class="num">tradable</th><th class="num">active</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              <tr><td><span class="pill origin">VVS whitelist</span></td><td class="num">96</td><td class="num">80</td><td class="num">24</td><td class="num">200</td></tr>
+              <tr><td><span class="pill origin">Hyperliquid</span></td><td class="num">12</td><td class="num">30</td><td class="num">211</td><td class="num">253</td></tr>
+              <tr><td><span class="pill origin">Launchpad graduate</span></td><td class="num">6</td><td class="num">2</td><td class="num">0</td><td class="num">8</td></tr>
+              <tr class="total"><td>All origins</td><td class="num">114</td><td class="num">112</td><td class="num">235</td><td class="num">461</td></tr>
+            </tbody>
+          </table>
+          <div class="foot">Origin per 3.2.4. Rows sum to the status cards above. A new origin appears here as a new row, with no view change.</div>
+        </div>
+        <div class="card">
+          <h3>Holds by reason</h3>
+          <div class="kv"><span>canonical chain unsupported</span><b>4</b></div>
+          <div class="kv"><span>excluded by operator decision</span><b>3</b></div>
+          <div class="kv"><span style="font-weight:600;color:var(--text)">Total held</span><b>7</b></div>
+          <div class="foot">pre_list assets not eligible for the operator step regardless of gate results (3.1.2 Holds).</div>
+        </div>
+        <div class="card">
+          <div class="cap">Stale tradable</div>
+          <div class="big">5</div>
+          <div class="sm">tradable assets below their liquidity floor for 14 consecutive days · delisting out of scope (3.1.2)</div>
+        </div>
       </div>
       <div class="cards two">
         <div class="card">
@@ -252,19 +305,23 @@
         <div class="card">
           <h3>Thresholds in force (last recompute)</h3>
           <table>
-            <thead><tr><th>Branch</th><th>Gate</th><th>Stage</th><th>Threshold</th><th>Source</th></tr></thead>
+            <thead><tr><th>Origin</th><th>Branch</th><th>Gate</th><th>Stage</th><th>Threshold</th><th>Sustain window</th><th>Source</th></tr></thead>
             <tbody>
-              <tr><td>Spot-only</td><td>Aggregate liquidity</td><td><span class="pill stage">Tradable</span></td><td class="mono">&gt;= $5,000</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
-              <tr><td>Spot-only</td><td>24h volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $10,000</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
-              <tr><td>Has perp instrument</td><td>24h notional volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $100,000</td><td class="muted">Hyperliquid (via Price Service API)</td></tr>
+              <tr><td><span class="pill origin">VVS whitelist</span></td><td>Spot-only</td><td>Aggregate liquidity</td><td><span class="pill stage">Tradable</span></td><td class="mono">&gt;= $5,000</td><td class="muted">none</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
+              <tr><td><span class="pill origin">VVS whitelist</span></td><td>Spot-only</td><td>24h volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $10,000</td><td class="muted">none</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
+              <tr><td><span class="pill origin">Hyperliquid</span></td><td>Has perp instrument</td><td>24h notional volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $100,000</td><td class="muted">none</td><td class="muted">Hyperliquid (via Price Service API)</td></tr>
+              <tr><td><span class="pill origin">Launchpad graduate</span></td><td>Spot-only</td><td>Aggregate liquidity</td><td><span class="pill stage">Tradable</span></td><td class="mono">&gt;= $5,000</td><td class="muted">none</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
+              <tr><td><span class="pill origin">Launchpad graduate</span></td><td>Spot-only</td><td>24h volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $10,000</td><td>3 consecutive daily recomputes</td><td class="muted">Coingecko / GeckoTerminal</td></tr>
+              <tr class="dim"><td><span class="pill origin">Robinhood Chain</span></td><td>Spot-only</td><td>Aggregate liquidity</td><td><span class="pill stage">Tradable</span></td><td class="mono">&gt;= $25,000</td><td>none</td><td>not configured · governed by RH P/PS</td></tr>
+              <tr class="dim"><td><span class="pill origin">Robinhood Chain</span></td><td>Spot-only</td><td>24h volume</td><td><span class="pill stage">Active</span></td><td class="mono">&gt;= $50,000</td><td>3 days</td><td>not configured · governed by RH P/PS</td></tr>
             </tbody>
           </table>
-          <div class="foot">Thresholds are configuration (3.1.5). Values shown are those the last recompute ran with. Read-only.</div>
+          <div class="foot">Thresholds are configuration (3.1.5). Values shown are those the last recompute ran with. Read-only. Grouped by origin and branch (3.2.4).</div>
         </div>
         <div class="card">
           <h3>Clearance today (active-stage gate)</h3>
-          <div class="clr"><div><div>Has perp instrument</div><div class="pct">225 of 282 assets</div></div><b>79.8%</b></div>
-          <div class="clr"><div><div>Spot-only</div><div class="pct">11 of 193 assets</div></div><b>5.7%</b></div>
+          <div class="clr"><div><div>Has perp instrument</div><div class="pct">211 of 284 assets</div></div><b>74.3%</b></div>
+          <div class="clr"><div><div>Spot-only</div><div class="pct">24 of 177 assets</div></div><b>13.6%</b></div>
           <div class="foot">Share of each branch clearing its active-stage threshold in recompute #212.</div>
         </div>
       </div>
@@ -273,17 +330,19 @@
     <!-- VIEW 3: Status Change Log -->
     <section class="view" id="view-log">
       <div class="page-head">
-        <div><h1>Status Change Log</h1><div class="sub">Every status change in the registry, regardless of origin. 14-day retention.</div></div>
-        <div class="asof">Window: 01/09/2026 to 14/09/2026</div>
+        <div><h1>Status Change Log</h1><div class="sub">Every status change and instrument event in the registry. 14-day retention.</div></div>
+        <div class="asof">Window: 02/09/2026 to 16/09/2026</div>
       </div>
       <div class="filters">
         <input class="search" id="l-search" placeholder="Search asset name or symbol..." oninput="renderLog()">
-        <select class="dd" id="l-origin" onchange="renderLog()"><option value="">All origins</option><option>First sync</option><option>Daily recompute</option><option>Operator action</option></select>
-        <span class="chip">01/09/2026 to 14/09/2026</span>
+        <select class="dd" id="l-event" onchange="renderLog()"><option value="">Event: all</option><option value="status">Event: status change</option><option value="inst">Event: instrument event</option></select>
+        <select class="dd" id="l-aorigin" onchange="renderLog()"><option value="">Origin: all</option><option>VVS whitelist</option><option>Hyperliquid</option><option>Launchpad graduate</option></select>
+        <select class="dd" id="l-origin" onchange="renderLog()"><option value="">Origin of change: all</option><option>First sync</option><option>Daily recompute</option><option>Operator action</option></select>
+        <span class="chip">02/09/2026 to 16/09/2026</span>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Timestamp</th><th>Asset</th><th>From → To</th><th>Origin</th><th>Driving gate</th><th>Measured value</th><th>Threshold</th></tr></thead>
+          <thead><tr><th>Timestamp</th><th>Asset</th><th>Origin</th><th>Chain</th><th>Event</th><th>From → To</th><th>Origin of change</th><th>Driving gate</th><th>Measured value</th><th>Threshold</th></tr></thead>
           <tbody id="log-body"></tbody>
         </table>
       </div>
@@ -295,6 +354,7 @@
 // ---------- Sample data ----------
 const SNAP_TS = '14/09/2026, 08:35:00';
 const THR = { liq: 5000, vol: 10000, notional: 100000 };
+const CAN_SELF = 'this listing is canonical';   // canonical marker for Cronos-native listings
 const usd = n => '$' + n.toLocaleString('en-US');
 const inst = (kind, key, status, meta, source, ts) => ({ kind, key, status, meta, source, ts });
 
@@ -314,86 +374,140 @@ function perpGates(notional) {
 const HIST_DATES = ['08/09/2026', '09/09/2026', '10/09/2026', '11/09/2026', '12/09/2026', '13/09/2026', '14/09/2026'];
 const HIST_MULT = [0.91, 0.96, 1.04, 0.88, 0.97, 1.02, 1.0];
 
+// Per-asset identity fields (3.2.4 / 3.4.2): origin, chain, canonical ({asset, chain} or CAN_SELF),
+// holdReason (null | 'canonical chain unsupported' | 'excluded by operator decision'), sustain (null | {day, of}).
+// contract is derived from the spot instrument key below.
 const assets = [
   { name: 'PAX Gold', symbol: 'PAXG', type: 'crypto', status: 'active', branch: 'perp', color: '#c9a227', ini: 'PG', expanded: true,
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
     categories: ['Gold & Silver', 'Crypto'], umbrella: 'Crypto', primaryValue: 1284500,
     instruments: [
       inst('spot', 'spot:cronos:0x81749e7258f9e577f61f49abeeb426b70f561b89', 'active', 'cronos · 18 decimals · vvs', 'coingecko', '12/08/2026, 08:35:00'),
       inst('perp', 'perp:hyperliquid:PAXG', 'active', 'hyperliquid · source ID PAXG', 'hyperliquid', '12/08/2026, 08:35:00') ],
     gates: perpGates(1284500) },
+  { name: 'Pudgy Penguins', symbol: 'PENGU', type: 'crypto', status: 'active', branch: 'perp', color: '#38bdf8', ini: 'PE',
+    origin: 'Hyperliquid', chain: 'n/a (perp)', canonical: { asset: 'Pudgy Penguins (pudgy-penguins)', chain: 'Solana' },
+    identityNote: 'Cronos spot leg removed 16/09/2026 under 3.1.2 Step 0 rule 2 (IOU of a Solana-native token). Native instrument will be added when Solana is supported.',
+    firstSynced: '07/08/2026, 08:07:00', updatedBy: 'gerald.yee', updatedAt: '16/09/2026, 09:12:00',
+    categories: ['Memecoins', 'Crypto'], umbrella: 'Crypto', primaryValue: 3860000,
+    instruments: [ inst('perp', 'perp:hyperliquid:PENGU', 'active', 'hyperliquid · source ID PENGU', 'hyperliquid', '13/09/2026, 08:35:00') ],
+    gates: perpGates(3860000) },
   { name: 'DappRadar', symbol: 'RADAR', type: 'crypto', status: 'pre_list', branch: 'spot', color: '#3b6fd8', ini: 'R', eligible: 'none',
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '08/09/2026, 08:07:00', updatedBy: 'system', updatedAt: '08/09/2026, 08:07:00',
     categories: ['Crypto', 'DeFi'], umbrella: 'Crypto', primaryValue: 1940,
     instruments: [ inst('spot', 'spot:cronos:0x5f9c8bb4f7f3a5d32a9e12c8b4a7d0e6f1c2b3a4', 'pre_list', 'cronos · 18 decimals · vvs', 'coingecko', '08/09/2026, 08:07:00') ],
     gates: spotGates('08:34:52', 2, 'liquidity', 1940, 610) },
   { name: 'My Neighbor Alice', symbol: 'ALICE', type: 'crypto', status: 'pre_list', branch: 'spot', color: '#e0578a', ini: 'AL', eligible: 'tradable',
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '05/09/2026, 08:07:00', updatedBy: 'system', updatedAt: '05/09/2026, 08:07:00',
     categories: ['Gaming', 'Crypto'], umbrella: 'Crypto', primaryValue: 7320,
     instruments: [ inst('spot', 'spot:cronos:0x2a1c9f7e4b6d8a0c3e5f7b9d1a3c5e7f9b1d3a5c', 'pre_list', 'cronos · 18 decimals · vvs', 'coingecko', '05/09/2026, 08:07:00') ],
     gates: spotGates('08:34:49', 3, '', 7320, 3150) },
-  { name: 'Origin Protocol', symbol: 'OGN', type: 'crypto', status: 'tradable', branch: 'spot', color: '#1f8fff', ini: 'OG',
+  { name: 'Helium', symbol: 'HNT', type: 'crypto', status: 'pre_list', branch: 'spot', color: '#474dff', ini: 'HN', eligible: 'none',
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: { asset: 'Helium (helium)', chain: 'Solana' }, holdReason: 'canonical chain unsupported',
+    firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '16/09/2026, 08:35:00',
+    categories: ['Crypto'], umbrella: 'Crypto', primaryValue: 42300,
+    instruments: [ inst('spot', 'spot:cronos:0xb3e7d1a9c5f2e8b4d6a0c3e7f9b1d5a3c7e9f2b4', 'pre_list', 'cronos · 8 decimals · vvs · IOU, not listable (Step 0 rule 2)', 'coingecko', '07/08/2026, 08:07:00') ],
+    gates: spotGates('08:34:56', 3, '', 42300, 61200) },
+  { name: 'Origin Protocol', symbol: 'OGN', type: 'crypto', status: 'tradable', branch: 'spot', color: '#1f8fff', ini: 'OG', staleDays: 14,
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '07/08/2026, 08:07:00', updatedBy: 'gerald.yee', updatedAt: '11/09/2026, 10:12:45',
-    categories: ['Crypto', 'DeFi'], umbrella: 'Crypto', primaryValue: 6880,
+    categories: ['Crypto', 'DeFi'], umbrella: 'Crypto', primaryValue: 3900,
     instruments: [ inst('spot', 'spot:cronos:0x8f3b1d5c7e9a2b4d6f8a0c2e4b6d8f0a2c4e6b8d', 'tradable', 'cronos · 18 decimals · vvs', 'coingecko', '11/09/2026, 10:12:45') ],
-    gates: spotGates('08:34:55', 3, '', 11400, 6880) },
+    gates: spotGates('08:34:55', 3, '', 3900, 6880) },
+  { name: 'Pumpkin', symbol: 'PKN', type: 'crypto', status: 'tradable', branch: 'spot', color: '#ea580c', ini: 'PK', highRisk: true, sustain: { day: 2, of: 3 },
+    origin: 'Launchpad graduate', chain: 'Cronos EVM', canonical: CAN_SELF,
+    firstSynced: '14/09/2026, 08:07:00', updatedBy: 'gerald.yee', updatedAt: '14/09/2026, 09:41:20',
+    categories: ['Crypto', 'Cronos Ecosystem', 'Memecoins'], umbrella: 'Crypto', primaryValue: 23600,
+    instruments: [ inst('spot', 'spot:cronos:0xc4d2a8e6f1b3d7c9e5a2f8b4d6c0e2a4f6b8d1c3', 'tradable', 'cronos · 18 decimals · vvs · launchpad: CDC', 'coingecko', '14/09/2026, 09:41:20') ],
+    gates: spotGates('08:34:59', 3, '', 23600, 14200) },
   { name: 'Goatseus Maximus', symbol: 'GOAT', type: 'crypto', status: 'active', branch: 'perp', color: '#8b5cf6', ini: 'GT',
+    origin: 'Hyperliquid', chain: 'n/a (perp)', canonical: { asset: 'Goatseus Maximus (goatseus-maximus)', chain: 'Solana' },
+    identityNote: 'Spot leg not listed: Solana-native (3.1.2 Step 0 rule 2). Perp-only, so no hold applies.',
     firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '13/09/2026, 08:35:00',
     categories: ['Memecoins', 'Crypto'], umbrella: 'Crypto', primaryValue: 2910000,
     instruments: [ inst('perp', 'perp:hyperliquid:GOAT', 'active', 'hyperliquid · source ID GOAT', 'hyperliquid', '13/09/2026, 08:35:00') ],
     gates: perpGates(2910000) },
   { name: 'Moonlander', symbol: 'MLD', type: 'crypto', status: 'pre_list', branch: 'spot', color: '#0ea5e9', ini: 'ML', eligible: 'tradable', unmapped: true,
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF,
     firstSynced: '12/09/2026, 08:07:00', updatedBy: 'system', updatedAt: '12/09/2026, 08:07:00',
     categories: [], umbrella: 'Crypto', primaryValue: 9150,
     instruments: [ inst('spot', 'spot:cronos:0x4d7e9a1c3b5f7d9e1a3c5b7d9f1e3a5c7b9d1f3e', 'pre_list', 'cronos · 18 decimals · vvs', 'coingecko', '12/09/2026, 08:07:00') ],
     gates: spotGates('08:34:58', 3, '', 9150, 4020) },
   { name: 'Single Finance', symbol: 'SINGLE', type: 'crypto', status: 'pre_list', branch: 'spot', color: '#f97316', ini: 'SI', eligible: 'none', excluded: true, excludedOn: '21/08/2026',
+    origin: 'VVS whitelist', chain: 'Cronos EVM', canonical: CAN_SELF, holdReason: 'excluded by operator decision',
     firstSynced: '07/08/2026, 08:07:00', updatedBy: 'gerald.yee', updatedAt: '21/08/2026, 14:20:10',
     categories: ['Crypto', 'DeFi'], umbrella: 'Crypto', primaryValue: 2780,
     instruments: [ inst('spot', 'spot:cronos:0x39bc8a1e5d7f9b3c1e5a7c9b3d5f7a9c1e3b5d7f', 'pre_list', 'cronos · 18 decimals · vvs', 'coingecko', '21/08/2026, 14:20:10') ],
     gates: spotGates('08:34:50', 3, '', 2780, 890) },
-  { name: 'Tesla', symbol: 'TSLA', type: 'stock', status: 'active', branch: 'spot', color: '#dc2626', ini: 'T',
-    firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
+  { name: 'Tesla', symbol: 'TSLA', type: 'stock', status: 'active', branch: 'perp', color: '#dc2626', ini: 'T',
+    origin: 'Hyperliquid', chain: 'n/a (perp)', canonical: CAN_SELF,
+    firstSynced: '07/08/2026, 08:33:05', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
     categories: ['Big Brands', 'Stock Market & Economy'], umbrella: 'Stocks', primaryValue: 1880000,
-    instruments: [ inst('spot', 'spot:cronos:0x6c2e4a8f0b2d4f6a8c0e2b4d6f8a0c2e4b6d8f0a', 'active', 'cronos · 18 decimals · vvs', 'coingecko', '12/08/2026, 08:35:00') ],
-    gates: spotGates('08:34:57', 3, '', 412000, 1880000) },
-  { name: 'NVIDIA', symbol: 'NVDA', type: 'stock', status: 'active', branch: 'spot', color: '#65a30d', ini: 'NV',
-    firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
-    categories: ['AI & Tech', 'Semiconductors'], umbrella: 'Stocks', primaryValue: 3420000,
-    instruments: [ inst('spot', 'spot:cronos:0x9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b', 'active', 'cronos · 18 decimals · vvs', 'coingecko', '12/08/2026, 08:35:00') ],
-    gates: spotGates('08:34:57', 3, '', 655000, 3420000) },
-  { name: 'Gold', symbol: 'XAU', type: 'commodity', status: 'active', branch: 'spot', color: '#eab308', ini: 'AU',
-    firstSynced: '07/08/2026, 08:07:00', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
+    instruments: [ inst('perp', 'perp:hyperliquid:xyz:TSLA', 'active', 'hyperliquid · source ID xyz:TSLA', 'hyperliquid', '14/09/2026, 08:35:00') ],
+    gates: perpGates(1880000) },
+  { name: 'NVIDIA', symbol: 'NVDA', type: 'stock', status: 'active', branch: 'perp', color: '#65a30d', ini: 'NV',
+    origin: 'Hyperliquid', chain: 'n/a (perp)', canonical: CAN_SELF,
+    firstSynced: '07/08/2026, 08:33:05', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
+    categories: ['Tech & AI', 'Semiconductors'], umbrella: 'Stocks', primaryValue: 3420000,
+    instruments: [ inst('perp', 'perp:hyperliquid:xyz:NVDA', 'active', 'hyperliquid · source ID xyz:NVDA', 'hyperliquid', '14/09/2026, 08:35:00') ],
+    gates: perpGates(3420000) },
+  { name: 'Gold', symbol: 'XAU', type: 'commodity', status: 'active', branch: 'perp', color: '#eab308', ini: 'AU',
+    origin: 'Hyperliquid', chain: 'n/a (perp)', canonical: CAN_SELF,
+    firstSynced: '07/08/2026, 08:33:05', updatedBy: 'system', updatedAt: '14/09/2026, 08:35:00',
     categories: ['Gold & Silver', 'Precious Metal'], umbrella: 'Commodities', primaryValue: 940000,
-    instruments: [ inst('spot', 'spot:cronos:0x1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a9c', 'active', 'cronos · 18 decimals · vvs', 'coingecko', '12/08/2026, 08:35:00') ],
-    gates: spotGates('08:34:53', 3, '', 220000, 940000) },
+    instruments: [ inst('perp', 'perp:hyperliquid:xyz:XAU', 'active', 'hyperliquid · source ID xyz:XAU', 'hyperliquid', '14/09/2026, 08:35:00') ],
+    gates: perpGates(940000) },
 ];
+// Derive contract address from the spot instrument; normalise optional fields.
+assets.forEach(a => {
+  const spot = a.instruments.find(x => x.kind === 'spot');
+  a.contract = spot ? spot.key.split(':')[2] : null;
+  a.holdReason = a.holdReason || null;
+  a.sustain = a.sustain || null;
+});
 
-const umbrella = [['Crypto', 354], ['Stocks', 93], ['Commodities', 8], ['Foreign Exchange', 3]];
-const interest = [['Crypto', 302], ['Memecoins', 118], ['Cronos Ecosystem', 74], ['DeFi', 61], ['AI & Tech', 41], ['Big Brands', 27], ['Stock Market & Economy', 19], ['Gaming', 12], ['Semiconductors', 11], ['Healthcare', 9], ['Pop Culture & Entertainment', 8], ['Internet Culture', 7], ['Politics', 6], ['World News', 5], ['Gold & Silver', 4], ['Oil', 3], ['Foreign Exchange', 3], ['Space', 3], ['Energy', 2], ['Precious Metal', 2], ['Climate', 2]];
+const umbrella = [['Crypto', 355], ['Stocks', 95], ['Commodities', 8], ['Foreign Exchange', 3]];
+const interest = [['Crypto', 302], ['Memecoins', 118], ['Cronos Ecosystem', 74], ['DeFi', 61], ['Tech & AI', 41], ['Big Brands', 27], ['Stock Market & Economy', 19], ['Gaming', 12], ['Semiconductors', 11], ['Healthcare', 9], ['Pop Culture & Entertainment', 8], ['Internet Culture', 7], ['Politics', 6], ['World News', 5], ['Gold & Silver', 4], ['Oil', 3], ['Foreign Exchange', 3], ['Space', 3], ['Energy', 2], ['Precious Metal', 2], ['Climate', 2]];
 
+// Log entries. src = [asset origin, chain]. event: 'status' (from/to) or 'inst' (desc). origin = origin of change.
+const HL = ['Hyperliquid', 'n/a (perp)'], VVS = ['VVS whitelist', 'Cronos EVM'], LP = ['Launchpad graduate', 'Cronos EVM'];
 const log = [
-  { ts: '14/09/2026, 08:35:00', name: 'Chainlink', sym: 'LINK', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$84,200', thr: '>= $100,000' },
-  { ts: '14/09/2026, 08:35:00', name: 'VVS Finance', sym: 'VVS', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$12,900', thr: '>= $10,000' },
-  { ts: '14/09/2026, 08:07:00', name: 'Pumpkin', sym: 'PKN', from: 'none', to: 'pre_list', origin: 'First sync' },
-  { ts: '13/09/2026, 15:42:11', name: 'Ethena', sym: 'ENA', from: 'pre_list', to: 'tradable', origin: 'Operator action', by: 'gerald.yee' },
-  { ts: '13/09/2026, 08:35:00', name: 'Goatseus Maximus', sym: 'GOAT', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$2,910,000', thr: '>= $100,000' },
-  { ts: '12/09/2026, 08:35:00', name: 'kPEPE', sym: 'kPEPE', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$91,400', thr: '>= $100,000' },
-  { ts: '12/09/2026, 08:07:00', name: 'Moonlander', sym: 'MLD', from: 'none', to: 'pre_list', origin: 'First sync' },
-  { ts: '11/09/2026, 10:12:45', name: 'Origin Protocol', sym: 'OGN', from: 'pre_list', to: 'tradable', origin: 'Operator action', by: 'gerald.yee' },
-  { ts: '10/09/2026, 08:35:00', name: 'Tectonic', sym: 'TONIC', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$14,300', thr: '>= $10,000' },
-  { ts: '09/09/2026, 08:35:00', name: 'Worldcoin', sym: 'WLD', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$97,800', thr: '>= $100,000' },
-  { ts: '08/09/2026, 08:07:00', name: 'DappRadar', sym: 'RADAR', from: 'none', to: 'pre_list', origin: 'First sync' },
-  { ts: '07/09/2026, 08:35:00', name: 'Mintable', sym: 'MINT', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$10,450', thr: '>= $10,000' },
-  { ts: '05/09/2026, 08:07:00', name: 'My Neighbor Alice', sym: 'ALICE', from: 'none', to: 'pre_list', origin: 'First sync' },
-  { ts: '03/09/2026, 09:20:31', name: 'Sui', sym: 'SUI', from: 'pre_list', to: 'active', origin: 'Operator action', by: 'gerald.yee' },
-  { ts: '02/09/2026, 08:35:00', name: 'Zerebro', sym: 'ZEREBRO', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$63,100', thr: '>= $100,000' },
+  { ts: '16/09/2026, 09:12:00', name: 'Pudgy Penguins', sym: 'PENGU', src: HL, event: 'inst', desc: 'Spot leg removed (spot:cronos:0x7694...)', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '16/09/2026, 09:12:00', name: 'Solana', sym: 'SOL', src: HL, event: 'inst', desc: 'Spot leg removed (spot:cronos:0xc21f...)', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '15/09/2026, 08:35:00', name: 'Croak', sym: 'CROAK', src: LP, event: 'status', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: 'Sustain window met (3 of 3 days above $10,000)', val: '$18,400', thr: '>= $10,000' },
+  { ts: '14/09/2026, 09:41:20', name: 'Pumpkin', sym: 'PKN', src: LP, event: 'status', from: 'pre_list', to: 'tradable', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '14/09/2026, 08:35:00', name: 'Chainlink', sym: 'LINK', src: HL, event: 'status', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$84,200', thr: '>= $100,000' },
+  { ts: '14/09/2026, 08:35:00', name: 'VVS Finance', sym: 'VVS', src: VVS, event: 'status', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$12,900', thr: '>= $10,000' },
+  { ts: '14/09/2026, 08:07:00', name: 'Pumpkin', sym: 'PKN', src: LP, event: 'status', from: 'none', to: 'pre_list', origin: 'First sync' },
+  { ts: '14/09/2026, 08:07:00', name: 'Pumpkin', sym: 'PKN', src: LP, event: 'inst', desc: 'Spot instrument added on Cronos EVM (first sync, origin: Launchpad graduate)', origin: 'First sync' },
+  { ts: '13/09/2026, 15:42:11', name: 'Ethena', sym: 'ENA', src: HL, event: 'status', from: 'pre_list', to: 'tradable', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '13/09/2026, 08:35:00', name: 'Goatseus Maximus', sym: 'GOAT', src: HL, event: 'status', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$2,910,000', thr: '>= $100,000' },
+  { ts: '12/09/2026, 08:35:00', name: 'kPEPE', sym: 'kPEPE', src: HL, event: 'status', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$91,400', thr: '>= $100,000' },
+  { ts: '12/09/2026, 08:07:00', name: 'Moonlander', sym: 'MLD', src: VVS, event: 'status', from: 'none', to: 'pre_list', origin: 'First sync' },
+  { ts: '11/09/2026, 10:12:45', name: 'Origin Protocol', sym: 'OGN', src: VVS, event: 'status', from: 'pre_list', to: 'tradable', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '10/09/2026, 08:35:00', name: 'Tectonic', sym: 'TONIC', src: VVS, event: 'status', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$14,300', thr: '>= $10,000' },
+  { ts: '09/09/2026, 08:35:00', name: 'Worldcoin', sym: 'WLD', src: HL, event: 'status', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$97,800', thr: '>= $100,000' },
+  { ts: '08/09/2026, 08:07:00', name: 'DappRadar', sym: 'RADAR', src: VVS, event: 'status', from: 'none', to: 'pre_list', origin: 'First sync' },
+  { ts: '07/09/2026, 08:35:00', name: 'Mintable', sym: 'MINT', src: VVS, event: 'status', from: 'tradable', to: 'active', origin: 'Daily recompute', gate: '24h volume', val: '$10,450', thr: '>= $10,000' },
+  { ts: '05/09/2026, 08:07:00', name: 'My Neighbor Alice', sym: 'ALICE', src: VVS, event: 'status', from: 'none', to: 'pre_list', origin: 'First sync' },
+  { ts: '03/09/2026, 09:20:31', name: 'Sui', sym: 'SUI', src: HL, event: 'status', from: 'pre_list', to: 'active', origin: 'Operator action', by: 'gerald.yee' },
+  { ts: '02/09/2026, 08:35:00', name: 'Zerebro', sym: 'ZEREBRO', src: HL, event: 'status', from: 'active', to: 'tradable', origin: 'Daily recompute', gate: 'Hyperliquid 24h notional', val: '$63,100', thr: '>= $100,000' },
 ];
 
 // ---------- Helpers ----------
 const pill = (cls, text) => `<span class="pill ${cls}">${text}</span>`;
 const statusPill = s => pill('mono ' + s, s);
 const esc = s => String(s).replace(/</g, '&lt;');
+const trunc = addr => addr.slice(0, 6) + '...' + addr.slice(-4);
+const COPY_SVG = '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+function copyAddr(el, addr) {
+  if (navigator.clipboard) navigator.clipboard.writeText(addr);
+  el.classList.add('done'); el.title = 'Copied';
+  setTimeout(() => { el.classList.remove('done'); el.title = 'Copy address'; }, 1200);
+}
 
 // ---------- View 1 ----------
 function toggleChip(el) { el.classList.toggle('on'); renderAssets(); }
@@ -405,6 +519,9 @@ function filteredAssets() {
   const type = document.getElementById('f-type').value;
   const status = document.getElementById('f-status').value;
   const instF = document.getElementById('f-inst').value;
+  const originF = document.getElementById('f-origin').value;
+  const chainF = document.getElementById('f-chain').value;
+  const holdF = document.getElementById('f-hold').value;
   const elig = document.getElementById('f-eligible').value;
   const onlyUnmapped = document.getElementById('f-unmapped').classList.contains('on');
   const onlyExcluded = document.getElementById('f-excluded').classList.contains('on');
@@ -412,22 +529,51 @@ function filteredAssets() {
     (!q || a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q) || a.instruments.some(x => x.key.toLowerCase().includes(q))) &&
     (!type || a.type === type) && (!status || a.status === status) &&
     (!instF || a.branch === instF) &&
+    (!originF || a.origin === originF) && (!chainF || a.chain === chainF) &&
+    (!holdF || a.holdReason === holdF) &&
     (!elig || a.eligible === elig) &&
     (!onlyUnmapped || a.unmapped) && (!onlyExcluded || a.excluded));
 }
 
+// Identity strip (3.4.2 asset-level fields): origin, chain, contract, canonical asset, hold reason for pre_list.
+function identityStrip(a) {
+  const canon = a.canonical === CAN_SELF
+    ? 'This listing is canonical'
+    : `${a.canonical.asset} <span class="sub">· canonical chain: ${a.canonical.chain}</span>`;
+  const contract = a.contract
+    ? `<span class="mono">${trunc(a.contract)}</span><span class="copy" title="Copy address" onclick="copyAddr(this,'${a.contract}')">${COPY_SVG}</span>`
+    : '<span class="muted">none (perp-only)</span>';
+  const hold = a.status === 'pre_list'
+    ? `<div class="cell"><div class="k">Hold reason</div><div class="v">${a.holdReason ? pill('held', a.holdReason) : 'none'}</div></div>` : '';
+  return `<div class="ident">
+    <div class="cell"><div class="k">Origin</div><div class="v">${pill('origin', a.origin)}</div></div>
+    <div class="cell"><div class="k">Chain</div><div class="v">${a.chain}</div></div>
+    <div class="cell"><div class="k">Contract</div><div class="v">${contract}</div></div>
+    <div class="cell"><div class="k">Canonical asset</div><div class="v" title="${a.canonical === CAN_SELF ? CAN_SELF : a.canonical.asset + ' on ' + a.canonical.chain}">${canon}</div></div>
+    ${hold}</div>`;
+}
+
 function gatePanel(a, i) {
   const branch = a.branch === 'perp' ? 'Has perp instrument' : 'Spot-only';
-  const rows = a.gates.map(g => `<tr><td>${g.gate}</td><td>${pill('stage', g.stage)}</td><td class="mono">${g.measured}</td><td class="mono muted">${g.threshold}</td><td>${pill(g.pass ? 'pass' : 'fail', g.pass ? 'Pass' : 'Fail')}</td></tr>`).join('');
+  const result = g => {
+    if (!g.pass) return pill('fail', 'Fail');
+    if (a.sustain && g.stage === 'Active') return pill('amber', `Pass · Sustain day ${a.sustain.day} of ${a.sustain.of}`);
+    return pill('pass', 'Pass');
+  };
+  const rows = a.gates.map(g => `<tr><td>${g.gate}</td><td>${pill('stage', g.stage)}</td><td class="mono">${g.measured}</td><td class="mono muted">${g.threshold}</td><td>${result(g)}</td></tr>`).join('');
   const perpNote = a.branch === 'perp' ? `<tr><td colspan="5" class="muted" style="font-style:italic">No tradable-stage gates apply to perp-instrument assets (3.1.2).</td></tr>` : '';
   const cats = a.categories.length ? a.categories.join(', ') : '<span class="pill amber">Unmapped</span>';
   let note = '';
   if (a.excluded) note = `<div class="note">Excluded by operator decision on ${a.excludedOn} (read-only).</div>`;
+  else if (a.holdReason) note = `<div class="note">Held: ${a.holdReason}. Not eligible for the operator step regardless of gate results (3.1.2 Holds).</div>`;
   else if (a.status === 'pre_list') {
     note = a.eligible === 'none'
       ? `<div class="note">Not yet eligible. Failing tradable-stage gate shown above. Recomputed daily.</div>`
       : `<div class="note">Eligible for ${a.eligible}. Promotion is an operator action in the Phase 1 Admin Panel (not available in this view).</div>`;
   }
+  if (a.sustain) note += `<div class="note">Becomes active after ${a.sustain.of} consecutive daily recomputes above the volume floor (3.2.4).</div>`;
+  if (a.staleDays) note += `<div class="note">Liquidity below the ${usd(THR.liq)} floor for ${a.staleDays} consecutive days. Stays tradable: delisting is out of scope (3.1.2).</div>`;
+  if (a.identityNote) note += `<div class="note">${a.identityNote}</div>`;
   if (a.unmapped) note += `<div class="note warn">Interest category unmapped by the 3.3.1 category skill. Manual override is Phase 1 Admin Panel scope.</div>`;
 
   const primary = a.gates.find(g => g.primary);
@@ -440,10 +586,10 @@ function gatePanel(a, i) {
       return `<tr><td class="ts">${d}, 08:35:00</td><td class="mono">${usd(v)}</td><td class="mono muted">>= ${usd(thrVal)}</td><td>${pill(ok ? 'pass' : 'fail', ok ? 'Pass' : 'Fail')}</td></tr>`;
     }).join('');
     hist = `<div class="hist"><table><thead><tr><th>Snapshot</th><th>${primary.gate} (measured)</th><th>Threshold in force</th><th>Result</th></tr></thead><tbody>${hrows}</tbody></table>
-      <div class="foot" style="padding:6px 10px;margin:0">Showing last 7 of 90 retained daily snapshots.</div></div>`;
+      <div class="foot" style="padding:6px 10px;margin:0">Showing last 7 of 14 retained daily snapshots.</div></div>`;
   }
   return `<div class="snap">
-    <div class="snap-head"><div><b>Daily gate snapshot</b> <span class="muted">· as of ${SNAP_TS} · branch: ${branch}</span></div><span class="ro">Read-only</span></div>
+    <div class="snap-head"><div><b>Daily gate snapshot</b> <span class="muted">· as of ${SNAP_TS} · origin: ${a.origin} · branch: ${branch}</span></div><span class="ro">Read-only</span></div>
     <table><thead><tr><th>Gate</th><th>Stage</th><th>Measured value</th><th>Threshold in force</th><th>Result</th></tr></thead><tbody>${rows}${perpNote}</tbody></table>
     <div class="snap-foot">
       <div>First synced ${a.firstSynced} · Interest categories: ${cats} · Umbrella: ${a.umbrella}</div>
@@ -465,27 +611,36 @@ function instRows(a) {
     </div>`).join('');
 }
 
+// Eligible-for cell: held > sustain window > pre_list eligibility > none.
+function eligibleCell(a) {
+  if (a.holdReason) return `<span class="pill held" title="Held: ${a.holdReason}">held</span>`;
+  if (a.sustain) { const d = a.sustain.of - a.sustain.day; return pill('amber', `active in ${d} day${d === 1 ? '' : 's'}`); }
+  if (a.status === 'pre_list') return pill('mono ' + a.eligible, a.eligible);
+  return '<span class="muted">–</span>';
+}
+
 function renderAssets() {
   const list = filteredAssets();
   const body = document.getElementById('asset-body');
-  if (!list.length) { body.innerHTML = '<tr><td colspan="9" class="empty">No assets match the current filters.</td></tr>'; return; }
+  if (!list.length) { body.innerHTML = '<tr><td colspan="10" class="empty">No assets match the current filters.</td></tr>'; return; }
   body.innerHTML = list.map(({ a, i }) => {
-    const flags = (a.excluded ? pill('excl', 'Excluded') : '') + (a.unmapped ? pill('amber', 'Unmapped') : '');
-    const elig = a.status === 'pre_list' ? pill('mono ' + a.eligible, a.eligible) : '<span class="muted">–</span>';
+    const flags = (a.excluded ? pill('excl', 'Excluded') : '') + (a.unmapped ? pill('amber', 'Unmapped') : '')
+      + (a.highRisk ? pill('risk', 'High risk') : '') + (a.staleDays ? pill('stale', `Below floor ${a.staleDays}d`) : '');
     const instSummary = a.instruments.map(x => pill('inst', x.kind)).join(' ');
     return `<tr class="asset-row">
       <td><div class="asset-cell"><span class="chev ${a.expanded ? 'open' : ''}" onclick="toggleRow(${i})">&#9656;</span>
         <span class="logo" style="background:${a.color}">${a.ini}</span>
         <div><div class="aname">${a.name}<span class="flags">${flags}</span></div><div class="asym">${a.symbol}</div></div></div></td>
       <td>${pill('type', a.type)}</td>
+      <td>${pill('origin', a.origin)}</td>
       <td>${statusPill(a.status)}</td>
-      <td>${elig}</td>
+      <td>${eligibleCell(a)}</td>
       <td class="ts">${a.firstSynced}</td>
       <td>${instSummary}</td>
       <td class="muted">${a.updatedBy}</td>
       <td class="ts">${a.updatedAt}</td>
       <td><div class="actions"><button class="btn sm">&#9998; Edit</button><button class="btn sm">+ Instrument</button></div></td>
-    </tr>` + (a.expanded ? `<tr class="expand"><td colspan="9">${instRows(a)}${gatePanel(a, i)}</td></tr>` : '');
+    </tr>` + (a.expanded ? `<tr class="expand"><td colspan="10">${instRows(a)}${identityStrip(a)}${gatePanel(a, i)}</td></tr>` : '');
   }).join('');
 }
 
@@ -506,16 +661,24 @@ function renderDashboard() {
 function renderLog() {
   const q = document.getElementById('l-search').value.trim().toLowerCase();
   const origin = document.getElementById('l-origin').value;
-  const rows = log.filter(e => (!origin || e.origin === origin) && (!q || e.name.toLowerCase().includes(q) || e.sym.toLowerCase().includes(q)));
+  const event = document.getElementById('l-event').value;
+  const aorigin = document.getElementById('l-aorigin').value;
+  const rows = log.filter(e =>
+    (!origin || e.origin === origin) && (!event || e.event === event) && (!aorigin || e.src[0] === aorigin) &&
+    (!q || e.name.toLowerCase().includes(q) || e.sym.toLowerCase().includes(q)));
   const body = document.getElementById('log-body');
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="7" class="empty">No entries match the current filters.</td></tr>'; return; }
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="10" class="empty">No entries match the current filters.</td></tr>'; return; }
+  const dash = '<span class="muted">–</span>';
   body.innerHTML = rows.map(e => `<tr>
       <td class="ts">${e.ts}</td>
       <td><span class="aname">${e.name}</span> <span class="asym">${e.sym}</span></td>
-      <td>${statusPill(e.from)}<span class="arrow">→</span>${statusPill(e.to)}</td>
+      <td class="evt">${e.src[0]}</td>
+      <td class="evt">${e.src[1]}</td>
+      <td>${e.event === 'inst' ? 'Instrument event' : 'Status change'}</td>
+      <td>${e.event === 'inst' ? `<span class="mono" style="color:#c9cdd6">${e.desc}</span>` : statusPill(e.from) + '<span class="arrow">→</span>' + statusPill(e.to)}</td>
       <td>${e.origin}${e.by ? ' <span class="muted">· ' + e.by + '</span>' : ''}</td>
-      <td>${e.gate || '<span class="muted">–</span>'}</td>
-      <td class="mono">${e.val || '<span class="muted">–</span>'}</td>
+      <td>${e.gate || dash}</td>
+      <td class="mono">${e.val || dash}</td>
       <td class="mono muted">${e.thr || '–'}</td>
     </tr>`).join('');
 }
