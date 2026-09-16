@@ -235,7 +235,6 @@
         <select class="dd" id="f-inst" onchange="renderAssets()"><option value="">Spot &amp; perp</option><option value="spot">Spot only</option><option value="perp">Has perp</option></select>
         <select class="dd" id="f-origin" onchange="renderAssets()"><option value="">Origin: all</option><option>VVS whitelist</option><option>Hyperliquid</option><option>Launchpad graduate</option></select>
         <select class="dd" id="f-chain" onchange="renderAssets()"><option value="">Chain: all</option><option>Cronos EVM</option><option>n/a (perp)</option></select>
-        <select class="dd" id="f-hold" onchange="renderAssets()"><option value="">Hold: any</option><option value="canonical chain unsupported">Hold: canonical chain unsupported</option><option value="excluded by operator decision">Hold: excluded by operator</option></select>
         <span class="chip-label">Req 4</span>
         <button class="chip amber" id="f-unmapped" onclick="toggleChip(this)"><span class="dot"></span>Unmapped category</button>
         <button class="chip" id="f-excluded" onclick="toggleChip(this)"><span class="dot"></span>Excluded by operator</button>
@@ -353,9 +352,6 @@ function spotGates(feedTs, present, missing, liq, vol) {
 function perpGates(notional) {
   return [{ gate: 'Hyperliquid 24h notional', stage: 'Active', measured: usd(notional), threshold: '>= ' + usd(THR.notional), pass: notional >= THR.notional, primary: true }];
 }
-// 7-day history for the primary gate, derived from today's value with static multipliers
-const HIST_DATES = ['08/09/2026', '09/09/2026', '10/09/2026', '11/09/2026', '12/09/2026', '13/09/2026', '14/09/2026'];
-const HIST_MULT = [0.91, 0.96, 1.04, 0.88, 0.97, 1.02, 1.0];
 
 // Per-asset identity fields (3.2.4 / 3.4.2): origin, chain, canonical ({asset, chain} or CAN_SELF),
 // holdReason (null | 'canonical chain unsupported' | 'excluded by operator decision'), sustain (null | {day, of}).
@@ -495,7 +491,6 @@ function copyAddr(el, addr) {
 // ---------- View 1 ----------
 function toggleChip(el) { el.classList.toggle('on'); renderAssets(); }
 function toggleRow(i) { assets[i].expanded = !assets[i].expanded; renderAssets(); }
-function toggleHist(i) { assets[i].showHist = !assets[i].showHist; renderAssets(); }
 
 function filteredAssets() {
   const q = document.getElementById('f-search').value.trim().toLowerCase();
@@ -504,7 +499,6 @@ function filteredAssets() {
   const instF = document.getElementById('f-inst').value;
   const originF = document.getElementById('f-origin').value;
   const chainF = document.getElementById('f-chain').value;
-  const holdF = document.getElementById('f-hold').value;
   const elig = document.getElementById('f-eligible').value;
   const onlyUnmapped = document.getElementById('f-unmapped').classList.contains('on');
   const onlyExcluded = document.getElementById('f-excluded').classList.contains('on');
@@ -513,7 +507,6 @@ function filteredAssets() {
     (!type || a.type === type) && (!status || a.status === status) &&
     (!instF || a.branch === instF) &&
     (!originF || a.origin === originF) && (!chainF || a.chain === chainF) &&
-    (!holdF || a.holdReason === holdF) &&
     (!elig || a.eligible === elig) &&
     (!onlyUnmapped || a.unmapped) && (!onlyExcluded || a.excluded));
 }
@@ -526,14 +519,12 @@ function identityStrip(a) {
   const contract = a.contract
     ? `<span class="mono">${trunc(a.contract)}</span><span class="copy" title="Copy address" onclick="copyAddr(this,'${a.contract}')">${COPY_SVG}</span>`
     : '<span class="muted">none (perp-only)</span>';
-  const hold = a.status === 'pre_list'
-    ? `<div class="cell"><div class="k">Hold reason</div><div class="v">${a.holdReason ? pill('held', a.holdReason) : 'none'}</div></div>` : '';
   return `<div class="ident">
     <div class="cell"><div class="k">Origin</div><div class="v">${pill('origin', a.origin)}</div></div>
     <div class="cell"><div class="k">Chain</div><div class="v">${a.chain}</div></div>
     <div class="cell"><div class="k">Contract</div><div class="v">${contract}</div></div>
     <div class="cell"><div class="k">Canonical asset</div><div class="v" title="${a.canonical === CAN_SELF ? CAN_SELF : a.canonical.asset + ' on ' + a.canonical.chain}">${canon}</div></div>
-    ${hold}</div>`;
+    </div>`;
 }
 
 function gatePanel(a, i) {
@@ -548,7 +539,6 @@ function gatePanel(a, i) {
   const cats = a.categories.length ? a.categories.join(', ') : '<span class="pill amber">Unmapped</span>';
   let note = '';
   if (a.excluded) note = `<div class="note">Excluded by operator decision on ${a.excludedOn} (read-only).</div>`;
-  else if (a.holdReason) note = `<div class="note">Held: ${a.holdReason}. Not eligible for the operator step regardless of gate results (3.1.2 Holds).</div>`;
   else if (a.status === 'pre_list') {
     note = a.eligible === 'none'
       ? `<div class="note">Not yet eligible. Failing tradable-stage gate shown above. Recomputed daily.</div>`
@@ -559,26 +549,12 @@ function gatePanel(a, i) {
   if (a.identityNote) note += `<div class="note">${a.identityNote}</div>`;
   if (a.unmapped) note += `<div class="note warn">Interest category unmapped by the 3.3.1 category skill. Manual override is Phase 1 Admin Panel scope.</div>`;
 
-  const primary = a.gates.find(g => g.primary);
-  const thrVal = a.branch === 'perp' ? THR.notional : THR.liq;
-  let hist = '';
-  if (a.showHist) {
-    const hrows = HIST_DATES.map((d, k) => {
-      const v = Math.round(a.primaryValue * HIST_MULT[k] / 10) * 10;
-      const ok = v >= thrVal;
-      return `<tr><td class="ts">${d}, 08:35:00</td><td class="mono">${usd(v)}</td><td class="mono muted">>= ${usd(thrVal)}</td><td>${pill(ok ? 'pass' : 'fail', ok ? 'Pass' : 'Fail')}</td></tr>`;
-    }).join('');
-    hist = `<div class="hist"><table><thead><tr><th>Snapshot</th><th>${primary.gate} (measured)</th><th>Threshold in force</th><th>Result</th></tr></thead><tbody>${hrows}</tbody></table>
-      <div class="foot" style="padding:6px 10px;margin:0">Showing last 7 of 14 retained daily snapshots.</div></div>`;
-  }
   return `<div class="snap">
     <div class="snap-head"><div><b>Daily gate snapshot</b> <span class="muted">· as of ${SNAP_TS} · origin: ${a.origin} · branch: ${branch}</span></div><span class="ro">Read-only</span></div>
     <table><thead><tr><th>Gate</th><th>Stage</th><th>Measured value</th><th>Threshold in force</th><th>Result</th></tr></thead><tbody>${rows}${perpNote}</tbody></table>
     <div class="snap-foot">
       <div>First synced ${a.firstSynced} · Interest categories: ${cats} · Umbrella: ${a.umbrella}</div>
       ${note}
-      <div><a onclick="toggleHist(${i})">${a.showHist ? 'Hide 14-day history' : 'View 14-day history'}</a></div>
-      ${hist}
     </div></div>`;
 }
 
@@ -594,9 +570,8 @@ function instRows(a) {
     </div>`).join('');
 }
 
-// Eligible-for cell: held > sustain window > pre_list eligibility > none.
+// Eligible-for cell: sustain window > pre_list eligibility > none.
 function eligibleCell(a) {
-  if (a.holdReason) return `<span class="pill held" title="Held: ${a.holdReason}">held</span>`;
   if (a.sustain) { const d = a.sustain.of - a.sustain.day; return pill('amber', `active in ${d} day${d === 1 ? '' : 's'}`); }
   if (a.status === 'pre_list') return pill('mono ' + a.eligible, a.eligible);
   return '<span class="muted">–</span>';
