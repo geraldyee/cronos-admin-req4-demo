@@ -131,6 +131,7 @@
   .cards.two{grid-template-columns:1.1fr 1.6fr}
   .cards.three{grid-template-columns:2fr 1fr}
   .cards.trio{grid-template-columns:1.7fr 1fr 1fr}
+  .cards.one{grid-template-columns:1fr}
   .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
   .card.hl{border-color:rgba(56,214,240,.45);background:linear-gradient(180deg,rgba(56,214,240,.08),rgba(56,214,240,.02))}
   .card .cap{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);font-weight:600}
@@ -263,7 +264,7 @@
         <div class="card"><div class="cap">active</div><div class="big">235</div><div class="sm">Promoted on Explore</div></div>
         <div class="card hl"><div class="cap" style="color:var(--cyan)">Awaiting operator step</div><div class="big">9</div><div class="sm">pre_list assets clearing tradable gates today · excludes held assets</div></div>
       </div>
-      <div class="cards trio">
+      <div class="cards one">
         <div class="card">
           <h3>Breakdown by origin</h3>
           <table>
@@ -277,18 +278,6 @@
           </table>
           <div class="foot">Origin per 3.2.4. Rows sum to the status cards above. A new origin appears here as a new row, with no view change.</div>
         </div>
-        <div class="card">
-          <h3>Holds by reason</h3>
-          <div class="kv"><span>canonical chain unsupported</span><b>4</b></div>
-          <div class="kv"><span>excluded by operator decision</span><b>3</b></div>
-          <div class="kv"><span style="font-weight:600;color:var(--text)">Total held</span><b>7</b></div>
-          <div class="foot">pre_list assets not eligible for the operator step regardless of gate results (3.1.2 Holds).</div>
-        </div>
-        <div class="card">
-          <div class="cap">Stale tradable</div>
-          <div class="big">5</div>
-          <div class="sm">tradable assets below their liquidity floor for 14 consecutive days · delisting out of scope (3.1.2)</div>
-        </div>
       </div>
       <div class="cards two">
         <div class="card">
@@ -301,7 +290,7 @@
           <div class="foot">Sports and Prediction Markets categories excluded. Assets can carry more than one interest category, so counts do not sum to the total.</div>
         </div>
       </div>
-      <div class="cards three">
+      <div class="cards one">
         <div class="card">
           <h3>Thresholds in force (last recompute)</h3>
           <table>
@@ -317,12 +306,6 @@
             </tbody>
           </table>
           <div class="foot">Thresholds are configuration (3.1.5). Values shown are those the last recompute ran with. Read-only. Grouped by origin and branch (3.2.4).</div>
-        </div>
-        <div class="card">
-          <h3>Clearance today (active-stage gate)</h3>
-          <div class="clr"><div><div>Has perp instrument</div><div class="pct">211 of 284 assets</div></div><b>74.3%</b></div>
-          <div class="clr"><div><div>Spot-only</div><div class="pct">24 of 177 assets</div></div><b>13.6%</b></div>
-          <div class="foot">Share of each branch clearing its active-stage threshold in recompute #212.</div>
         </div>
       </div>
     </section>
